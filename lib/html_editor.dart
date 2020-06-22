@@ -151,7 +151,7 @@ class HtmlEditorState extends State<HtmlEditor> {
                           match: ${r"/\B@(\w*)$/"},
                           search: function (keyword, callback) {
                             callback(\$.grep(this.mentions, function (item) {
-                              return item.indexOf(keyword) == 0;
+                              return item.toLowerCase().indexOf(keyword.toLowerCase()) > -1;
                             }));
                           },
                           content: function (item) {
