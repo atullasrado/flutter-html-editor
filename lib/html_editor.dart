@@ -134,7 +134,33 @@ class HtmlEditorState extends State<HtmlEditor> {
                 } else {
                   setHint("");
                 }
-
+                _controller.evaluateJavascript(
+                  '''\$('#summernote').summernote({
+                      placeholder: "&nbsp;",
+                      tabsize: 2,
+                      toolbar: [
+                        ['style', ['style']],
+                        ['font', ['bold', 'underline', 'italic']],
+                        ['color', ['color']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['insert', ['link']],
+                      ],
+                      disableGrammar: false,
+                      spellCheck: false,
+                      hint:{
+                        mentions: ['jayden', 'sam', 'alvin', 'david'],
+                        match: /\B@(\w*)\$/,
+                        search: function (keyword, callback) {
+                          callback(\$.grep(this.mentions, function (item) {
+                            return item.indexOf(keyword) == 0;
+                          }));
+                        },
+                        content: function (item) {
+                          return '@' + item;
+                        }    
+                      }
+                    });'''
+                );
                 setFullContainer();
                 if (widget.value != null) {
                   setText(widget.value);
