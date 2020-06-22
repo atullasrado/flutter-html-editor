@@ -26,7 +26,7 @@ class HtmlEditor extends StatefulWidget {
   final bool useBottomSheet;
   final String widthImage;
   final bool showBottomToolbar;
-  final String hint;
+  final String placeholder;
 
   HtmlEditor(
       {Key key,
@@ -36,7 +36,7 @@ class HtmlEditor extends StatefulWidget {
       this.useBottomSheet = true,
       this.widthImage = "100%",
       this.showBottomToolbar = true,
-      this.hint})
+      this.placeholder})
       : super(key: key);
 
   @override
@@ -129,11 +129,6 @@ class HtmlEditorState extends State<HtmlEditor> {
                 getTextJavascriptChannel(context)
               ].toSet(),
               onPageFinished: (String url) {
-                if (widget.hint != null) {
-                  setHint(widget.hint);
-                } else {
-                  setHint("");
-                }
                 _controller.evaluateJavascript(
                   '''\$('#summernote').summernote({
                       placeholder: "&nbsp;",
@@ -161,6 +156,12 @@ class HtmlEditorState extends State<HtmlEditor> {
                       }
                     });'''
                 );
+
+                if (widget.placeholder != null) {
+                  setPlaceholder(widget.placeholder);
+                } else {
+                  setPlaceholder("");
+                }
                 setFullContainer();
                 if (widget.value != null) {
                   setText(widget.value);
@@ -271,7 +272,7 @@ class HtmlEditorState extends State<HtmlEditor> {
     _controller.evaluateJavascript("\$('#summernote').summernote('reset');");
   }
 
-  setHint(String text) {
+  setPlaceholder(String text) {
     String hint = '\$(".note-placeholder").html("$text");';
     _controller.evaluateJavascript(hint);
   }
