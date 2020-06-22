@@ -27,6 +27,7 @@ class HtmlEditor extends StatefulWidget {
   final String widthImage;
   final bool showBottomToolbar;
   final String placeholder;
+  final List<String> mentionsList;
 
   HtmlEditor(
       {Key key,
@@ -36,7 +37,8 @@ class HtmlEditor extends StatefulWidget {
       this.useBottomSheet = true,
       this.widthImage = "100%",
       this.showBottomToolbar = true,
-      this.placeholder})
+      this.placeholder,
+      this.mentionsList = const []})
       : super(key: key);
 
   @override
@@ -129,43 +131,52 @@ class HtmlEditorState extends State<HtmlEditor> {
                 getTextJavascriptChannel(context)
               ].toSet(),
               onPageFinished: (String url) {
+                String mentionsString = jsonEncode(widget.mentionsList);
                 _controller.evaluateJavascript(
-                  '''\$('#summernote').summernote({
-                      placeholder: "&nbsp;",
-                      tabsize: 2,
-                      toolbar: [
-                        ['style', ['style']],
-                        ['font', ['bold', 'underline', 'italic']],
-                        ['color', ['color']],
-                        ['para', ['ul', 'ol', 'paragraph']],
-                        ['insert', ['link']],
-                      ],
-                      disableGrammar: false,
-                      spellCheck: false,
-                      hint:{
-                        mentions: ['jayden', 'sam', 'alvin', 'david'],
-                        match: /\B@(\w*)\$/,
-                        search: function (keyword, callback) {
-                          callback(\$.grep(this.mentions, function (item) {
-                            return item.indexOf(keyword) == 0;
-                          }));
-                        },
-                        content: function (item) {
-                          return '@' + item;
-                        }    
-                      }
-                    });'''
+                  '''setTimeout(function() {
+                      \$('#summernote').summernote({
+                        placeholder: "&nbsp;",
+                        tabsize: 2,
+                        toolbar: [
+                          ['font', ['bold', 'underline', 'italic']],
+                          ['style', ['style']],
+                          ['color', ['color']],
+                          ['para', ['ul', 'ol', 'paragraph']],
+                          ['insert', ['link']],
+                        ],
+                        disableGrammar: false,
+                        spellCheck: false,
+                        hint:{
+                          mentions: $mentionsString,
+                          match: ${r"/\B@(\w*)$/"},
+                          search: function (keyword, callback) {
+                            callback(\$.grep(this.mentions, function (item) {
+                              return item.indexOf(keyword) == 0;
+                            }));
+                          },
+                          content: function (item) {
+                            return '@' + item;
+                          }
+                        }
+                      });
+                    }, 0);'''
                 );
 
-                if (widget.placeholder != null) {
-                  setPlaceholder(widget.placeholder);
-                } else {
-                  setPlaceholder("");
-                }
-                setFullContainer();
-                if (widget.value != null) {
-                  setText(widget.value);
-                }
+                // Delay to allow time for summernote to initialize
+                Future.delayed(
+                  Duration(milliseconds: 50),
+                  () {
+                    setFullContainer();
+                    if (widget.placeholder != null && widget.value == null) {
+                      setPlaceholder(widget.placeholder);
+                    } else {
+                      setPlaceholder("");
+                    }
+                    if (widget.value != null) {
+                      setText(widget.value);
+                    }
+                  }
+                );
               },
             ),
           ),
@@ -273,8 +284,8 @@ class HtmlEditorState extends State<HtmlEditor> {
   }
 
   setPlaceholder(String text) {
-    String hint = '\$(".note-placeholder").html("$text");';
-    _controller.evaluateJavascript(hint);
+    String placeholderScript = 'setTimeout(function () {\$(".note-placeholder").html("$text");}, 0)';
+    _controller.evaluateJavascript(placeholderScript);
   }
 
   Widget widgetIcon(IconData icon, String title, {OnClik onKlik}) {
