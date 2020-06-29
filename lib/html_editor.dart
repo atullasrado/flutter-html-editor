@@ -155,7 +155,7 @@ class HtmlEditorState extends State<HtmlEditor> {
                             }));
                           },
                           content: function (item) {
-                            return '@' + item + '&nbsp;'';
+                            return '@' + item;
                           }
                         }
                       });
