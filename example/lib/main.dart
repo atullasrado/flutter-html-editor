@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:html_editor/html_editor.dart';
 
-/**
- * Created by riyadi rb on 2/5/2020.
- * link  : https://github.com/xrb21/flutter-html-editor
- */
+
+/// Created by riyadi rb on 2/5/2020.
+/// link  : https://github.com/xrb21/flutter-html-editor
 
 void main() => runApp(MyApp());
 
@@ -49,8 +48,8 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               HtmlEditor(
-                hint: "Your text here...",
-                //value: "text content initial, if any",
+                placeholder: "Your text here...",
+                value: "text content initial, if any",
                 key: keyEditor,
                 height: 400,
               ),

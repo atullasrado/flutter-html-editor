@@ -26,7 +26,8 @@ class HtmlEditor extends StatefulWidget {
   final bool useBottomSheet;
   final String widthImage;
   final bool showBottomToolbar;
-  final String hint;
+  final String placeholder;
+  final List<String> mentionsList;
 
   HtmlEditor(
       {Key key,
@@ -36,7 +37,8 @@ class HtmlEditor extends StatefulWidget {
       this.useBottomSheet = true,
       this.widthImage = "100%",
       this.showBottomToolbar = true,
-      this.hint})
+      this.placeholder,
+      this.mentionsList = const []})
       : super(key: key);
 
   @override
@@ -129,16 +131,52 @@ class HtmlEditorState extends State<HtmlEditor> {
                 getTextJavascriptChannel(context)
               ].toSet(),
               onPageFinished: (String url) {
-                if (widget.hint != null) {
-                  setHint(widget.hint);
-                } else {
-                  setHint("");
-                }
+                String mentionsString = jsonEncode(widget.mentionsList);
+                _controller.evaluateJavascript(
+                  '''setTimeout(function() {
+                      \$('#summernote').summernote({
+                        placeholder: "&nbsp;",
+                        tabsize: 2,
+                        toolbar: [
+                          ['font', ['bold', 'underline', 'italic']],
+                          ['style', ['style']],
+                          ['color', ['color']],
+                          ['para', ['ul', 'ol', 'paragraph']],
+                          ['insert', ['link']],
+                        ],
+                        disableGrammar: false,
+                        spellCheck: false,
+                        hint:{
+                          mentions: $mentionsString,
+                          match: ${r"/\B@(\w*)$/"},
+                          search: function (keyword, callback) {
+                            callback(\$.grep(this.mentions, function (item) {
+                              return item.toLowerCase().indexOf(keyword.toLowerCase()) > -1;
+                            }));
+                          },
+                          content: function (item) {
+                            return '@' + item;
+                          }
+                        }
+                      });
+                    }, 0);'''
+                );
 
-                setFullContainer();
-                if (widget.value != null) {
-                  setText(widget.value);
-                }
+                // Delay to allow time for summernote to initialize
+                Future.delayed(
+                  Duration(milliseconds: 50),
+                  () {
+                    setFullContainer();
+                    if (widget.placeholder != null && widget.value == null) {
+                      setPlaceholder(widget.placeholder);
+                    } else {
+                      setPlaceholder("");
+                    }
+                    if (widget.value != null) {
+                      setText(widget.value);
+                    }
+                  }
+                );
               },
             ),
           ),
@@ -245,9 +283,9 @@ class HtmlEditorState extends State<HtmlEditor> {
     _controller.evaluateJavascript("\$('#summernote').summernote('reset');");
   }
 
-  setHint(String text) {
-    String hint = '\$(".note-placeholder").html("$text");';
-    _controller.evaluateJavascript(hint);
+  setPlaceholder(String text) {
+    String placeholderScript = 'setTimeout(function () {\$(".note-placeholder").html("$text");}, 0)';
+    _controller.evaluateJavascript(placeholderScript);
   }
 
   Widget widgetIcon(IconData icon, String title, {OnClik onKlik}) {
